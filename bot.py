@@ -23,8 +23,8 @@ async def start(message: types.Message):
 
 @dp.message_handler(state=Feedback.source)
 async def get_source(message: types.Message, state: FSMContext):
-    if message.text not in ["🏨 Гостиница", "🏢 Лофт"]:
-        return await message.answer("Выберите вариант с кнопок")
+    if "Гостиница" not in message.text and "Лофт" not in message.text:
+    return await message.answer("Выберите вариант с кнопок")
 
     await state.update_data(source=message.text)
     await message.answer("Введите дату события:")
