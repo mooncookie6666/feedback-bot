@@ -44,7 +44,7 @@ async def get_source(message: types.Message, state: FSMContext):
         return await message.answer("Выберите вариант с кнопок")
 
     await state.update_data(source=source)
-    await message.answer("Введите дату события:")
+    await message.answer("Введите дату события (например: 12.05.2026):", reply_markup=types.ReplyKeyboardRemove())
     await Feedback.next()
 
 
