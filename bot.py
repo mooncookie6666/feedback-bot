@@ -60,22 +60,28 @@ async def get_date(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Feedback.review)
 async def get_review(message: types.Message, state: FSMContext):
     await state.update_data(review=message.text)
+
     from keyboards import contact_kb
 
-await message.answer(
-    "Оставьте контакт для связи или пропустите:",
-    reply_markup=contact_kb
-)
+    await message.answer(
+        "Оставьте контакт для связи или пропустите:",
+        reply_markup=contact_kb
+    )
+
     await Feedback.next()
 
-
 # --- CONTACT ---
-if message.contact:
-    contact = message.contact.phone_number
-elif message.text == "❌ Пропустить":
-    contact = "-"
-else:
-    contact = message.text
+# --- CONTACT ---
+@dp.message_handler(state=Feedback.contact, content_types=types.ContentTypes.ANY)
+async def get_contact(message: types.Message, state: FSMContext):
+
+    if message.contact:
+        contact = message.contact.phone_number
+    elif message.text == "❌ Пропустить":
+        contact = "-"
+    else:
+        contact = message.text
+
     await state.update_data(contact=contact)
 
     data = await state.get_data()
@@ -98,10 +104,9 @@ else:
 """
 
     await bot.send_message(ADMIN_ID, text)
-    await message.answer("Спасибо! 🙌")
+    await message.answer("Спасибо! 🙌", reply_markup=types.ReplyKeyboardRemove())
 
     await state.finish()
-
 
 # --- RUN ---
 if __name__ == "__main__":
