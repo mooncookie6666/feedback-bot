@@ -106,6 +106,13 @@ async def get_contact(message: types.Message, state: FSMContext):
         contact=data["contact"]
     )
 
+    save_to_sheets(
+    data["date"],
+    data["source"],
+    data["review"],
+    data["contact"]
+    )
+
     text = f"""
 📩 Новый отзыв
 
