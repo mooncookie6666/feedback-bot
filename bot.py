@@ -70,7 +70,13 @@ async def get_review(message: types.Message, state: FSMContext):
 
     await Feedback.next()
 
-# --- CONTACT ---
+# --- КНОПКА ---
+
+@dp.message_handler(lambda message: message.text == "🔁 Начать заново", state="*")
+async def restart(message: types.Message, state: FSMContext):
+    await state.finish()
+    await message.answer("Откуда вы?", reply_markup=start_kb)
+    await Feedback.source.set()
 # --- CONTACT ---
 @dp.message_handler(state=Feedback.contact, content_types=types.ContentTypes.ANY)
 async def get_contact(message: types.Message, state: FSMContext):
@@ -104,7 +110,9 @@ async def get_contact(message: types.Message, state: FSMContext):
 """
 
     await bot.send_message(ADMIN_ID, text)
-    await message.answer("Спасибо! 🙌", reply_markup=types.ReplyKeyboardRemove())
+    from keyboards import restart_kb
+
+await message.answer("Спасибо! 🙌", reply_markup=restart_kb)
 
     await state.finish()
 
