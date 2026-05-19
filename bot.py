@@ -16,10 +16,13 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
-@dp.message_handler(commands="start")
-async def start(message: types.Message):
+@dp.message_handler(commands="start", state="*")
+async def start(message: types.Message, state: FSMContext):
+    await state.finish()  # сбрасываем состояние
+
     await message.answer("Откуда вы?", reply_markup=start_kb)
     await Feedback.source.set()
+    
 
 @dp.message_handler(state=Feedback.source)
 async def get_source(message: types.Message, state: FSMContext):
@@ -62,6 +65,10 @@ async def get_contact(message: types.Message, state: FSMContext):
         contact=data["contact"]
     )
 
+    @dp.message_handler(commands="cancel", state="*")
+async def cancel(message: types.Message, state: FSMContext):
+    await state.finish()
+    await message.answer("Диалог сброшен. Напишите /start")
     text = f"""
 📩 Новый отзыв
 
