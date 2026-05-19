@@ -16,41 +16,55 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
+
+# --- START ---
 @dp.message_handler(commands="start", state="*")
 async def start(message: types.Message, state: FSMContext):
-    await state.finish()  # сбрасываем состояние
-
+    await state.finish()
     await message.answer("Откуда вы?", reply_markup=start_kb)
     await Feedback.source.set()
-    
 
+
+# --- CANCEL ---
+@dp.message_handler(commands="cancel", state="*")
+async def cancel(message: types.Message, state: FSMContext):
+    await state.finish()
+    await message.answer("Диалог сброшен. Напишите /start")
+
+
+# --- SOURCE ---
 @dp.message_handler(state=Feedback.source)
 async def get_source(message: types.Message, state: FSMContext):
-if "Гостиница" in message.text:
-    source = "Гостиница"
-elif "Лофт" in message.text:
-    source = "Лофт"
-else:
-    return await message.answer("Выберите вариант с кнопок")
 
-await state.update_data(source=source)
+    if "Гостиница" in message.text:
+        source = "Гостиница"
+    elif "Лофт" in message.text:
+        source = "Лофт"
+    else:
+        return await message.answer("Выберите вариант с кнопок")
 
-    await state.update_data(source=message.text)
+    await state.update_data(source=source)
     await message.answer("Введите дату события:")
     await Feedback.next()
 
+
+# --- DATE ---
 @dp.message_handler(state=Feedback.date)
 async def get_date(message: types.Message, state: FSMContext):
     await state.update_data(date=message.text)
     await message.answer("Напишите ваш отзыв:")
     await Feedback.next()
 
+
+# --- REVIEW ---
 @dp.message_handler(state=Feedback.review)
 async def get_review(message: types.Message, state: FSMContext):
     await state.update_data(review=message.text)
     await message.answer("Ваш контакт (или '-' чтобы пропустить):")
     await Feedback.next()
 
+
+# --- CONTACT ---
 @dp.message_handler(state=Feedback.contact)
 async def get_contact(message: types.Message, state: FSMContext):
     await state.update_data(contact=message.text)
@@ -65,10 +79,6 @@ async def get_contact(message: types.Message, state: FSMContext):
         contact=data["contact"]
     )
 
-    @dp.message_handler(commands="cancel", state="*")
-async def cancel(message: types.Message, state: FSMContext):
-    await state.finish()
-    await message.answer("Диалог сброшен. Напишите /start")
     text = f"""
 📩 Новый отзыв
 
@@ -83,6 +93,8 @@ async def cancel(message: types.Message, state: FSMContext):
 
     await state.finish()
 
+
+# --- RUN ---
 if __name__ == "__main__":
     init_db()
     executor.start_polling(dp, skip_updates=True)
