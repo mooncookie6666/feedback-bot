@@ -13,3 +13,5 @@ contact_kb.add(
     KeyboardButton("📱 Отправить контакт", request_contact=True),
     KeyboardButton("❌ Пропустить")
 )
+restart_kb = ReplyKeyboardMarkup(resize_keyboard=True)
+restart_kb.add(KeyboardButton("🔁 Начать заново"))
