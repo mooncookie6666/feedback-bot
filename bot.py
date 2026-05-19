@@ -5,7 +5,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 
 from states import Feedback
-from keyboards import start_kb
+from keyboards import start_kb, contact_kb, restart_kb
 from db import init_db, save_review
 
 API_TOKEN = os.getenv("API_TOKEN")
@@ -32,6 +32,14 @@ async def cancel(message: types.Message, state: FSMContext):
     await message.answer("Диалог сброшен. Напишите /start")
 
 
+# --- RESTART BUTTON ---
+@dp.message_handler(lambda message: message.text == "🔁 Начать заново", state="*")
+async def restart(message: types.Message, state: FSMContext):
+    await state.finish()
+    await message.answer("Откуда вы?", reply_markup=start_kb)
+    await Feedback.source.set()
+
+
 # --- SOURCE ---
 @dp.message_handler(state=Feedback.source)
 async def get_source(message: types.Message, state: FSMContext):
@@ -44,7 +52,12 @@ async def get_source(message: types.Message, state: FSMContext):
         return await message.answer("Выберите вариант с кнопок")
 
     await state.update_data(source=source)
-    await message.answer("Введите дату события (например: 12.05.2026):", reply_markup=types.ReplyKeyboardRemove())
+
+    await message.answer(
+        "Введите дату события (например: 12.05.2026):",
+        reply_markup=types.ReplyKeyboardRemove()
+    )
+
     await Feedback.next()
 
 
@@ -61,8 +74,6 @@ async def get_date(message: types.Message, state: FSMContext):
 async def get_review(message: types.Message, state: FSMContext):
     await state.update_data(review=message.text)
 
-    from keyboards import contact_kb
-
     await message.answer(
         "Оставьте контакт для связи или пропустите:",
         reply_markup=contact_kb
@@ -70,13 +81,7 @@ async def get_review(message: types.Message, state: FSMContext):
 
     await Feedback.next()
 
-# --- КНОПКА ---
 
-@dp.message_handler(lambda message: message.text == "🔁 Начать заново", state="*")
-async def restart(message: types.Message, state: FSMContext):
-    await state.finish()
-    await message.answer("Откуда вы?", reply_markup=start_kb)
-    await Feedback.source.set()
 # --- CONTACT ---
 @dp.message_handler(state=Feedback.contact, content_types=types.ContentTypes.ANY)
 async def get_contact(message: types.Message, state: FSMContext):
@@ -110,11 +115,11 @@ async def get_contact(message: types.Message, state: FSMContext):
 """
 
     await bot.send_message(ADMIN_ID, text)
-    from keyboards import restart_kb
 
-await message.answer("Спасибо! 🙌", reply_markup=restart_kb)
+    await message.answer("Спасибо! 🙌", reply_markup=restart_kb)
 
     await state.finish()
+
 
 # --- RUN ---
 if __name__ == "__main__":
