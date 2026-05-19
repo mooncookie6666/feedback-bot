@@ -60,14 +60,23 @@ async def get_date(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Feedback.review)
 async def get_review(message: types.Message, state: FSMContext):
     await state.update_data(review=message.text)
-    await message.answer("Ваш контакт (или '-' чтобы пропустить):")
+    from keyboards import contact_kb
+
+await message.answer(
+    "Оставьте контакт для связи или пропустите:",
+    reply_markup=contact_kb
+)
     await Feedback.next()
 
 
 # --- CONTACT ---
-@dp.message_handler(state=Feedback.contact)
-async def get_contact(message: types.Message, state: FSMContext):
-    await state.update_data(contact=message.text)
+if message.contact:
+    contact = message.contact.phone_number
+elif message.text == "❌ Пропустить":
+    contact = "-"
+else:
+    contact = message.text
+    await state.update_data(contact=contact)
 
     data = await state.get_data()
 
